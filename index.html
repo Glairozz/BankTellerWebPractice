@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Banking Program</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <div class="container">
+        <h2>Banking Program</h2>
+        <button onclick="showBalance()">Show Balance</button>
+        <button onclick="showDeposit()">Deposit</button>
+        <button onclick="showWithdraw()">Withdraw</button>
+        <button onclick="exitProgram()" class="exit-btn">Exit</button>
+
+        <div id="inputArea" class="hidden"></div>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        let balance = 0;
+
+        function showBalance() {
+            document.getElementById("output").innerText = `Your balance is: $${balance.toFixed(2)}`;
+        }
+
+        function showDeposit() {
+            const area = document.getElementById("inputArea");
+            area.innerHTML = `
+                <input type='number' id='depositAmount' placeholder='Enter amount to deposit' />
+                <button onclick='deposit()'>Confirm Deposit</button>
+            `;
+            area.classList.remove("hidden");
+        }
+
+        function deposit() {
+            let amount = parseFloat(document.getElementById("depositAmount").value);
+            if (isNaN(amount) || amount <= 0) {
+                document.getElementById("output").innerText = "Enter a valid amount.";
+                return;
+            }
+            balance += amount;
+            document.getElementById("output").innerText = `Deposited $${amount.toFixed(2)}.`;
+            document.getElementById("inputArea").classList.add("hidden");
+        }
+
+        function showWithdraw() {
+            const area = document.getElementById("inputArea");
+            area.innerHTML = `
+                <input type='number' id='withdrawAmount' placeholder='Enter amount to withdraw' />
+                <button onclick='withdraw()'>Confirm Withdrawal</button>
+            `;
+            area.classList.remove("hidden");
+        }
+
+        function withdraw() {
+            let amount = parseFloat(document.getElementById("withdrawAmount").value);
+
+            if (isNaN(amount) || amount <= 0) {
+                document.getElementById("output").innerText = "Enter a valid amount.";
+                return;
+            }
+
+            if (amount > balance) {
+                document.getElementById("output").innerText = "Insufficient funds.";
+                return;
+            }
+
+            balance -= amount;
+            document.getElementById("output").innerText = `Withdrew $${amount.toFixed(2)}.`;
+            document.getElementById("inputArea").classList.add("hidden");
+        }
+
+        function exitProgram() {
+            document.getElementById("output").innerText = "Thank you for using the banking program.";
+            document.getElementById("inputArea").classList.add("hidden");
+        }
+    </script>
+</body>
+
+</html>
