@@ -11,6 +11,7 @@
 <body>
     <div class="container">
         <h2>Banking Program</h2>
+        <a href="admin.html" class="admin-link">Admin</a>
         <button onclick="showBalance()">Show Balance</button>
         <button onclick="showDeposit()">Deposit</button>
         <button onclick="showWithdraw()">Withdraw</button>
@@ -22,6 +23,22 @@
 
     <script>
         let balance = 0;
+        const DB_KEY = "banking_records";
+
+        function getRecords() {
+            const data = localStorage.getItem(DB_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveRecord(type, amount) {
+            const records = getRecords();
+            records.push({
+                type: type,
+                amount: amount,
+                time: new Date().toLocaleString()
+            });
+            localStorage.setItem(DB_KEY, JSON.stringify(records));
+        }
 
         function showBalance() {
             document.getElementById("output").innerText = `Your balance is: $${balance.toFixed(2)}`;
@@ -43,6 +60,7 @@
                 return;
             }
             balance += amount;
+            saveRecord("Deposit", amount);
             document.getElementById("output").innerText = `Deposited $${amount.toFixed(2)}.`;
             document.getElementById("inputArea").classList.add("hidden");
         }
@@ -70,6 +88,7 @@
             }
 
             balance -= amount;
+            saveRecord("Withdrawal", amount);
             document.getElementById("output").innerText = `Withdrew $${amount.toFixed(2)}.`;
             document.getElementById("inputArea").classList.add("hidden");
         }

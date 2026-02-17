@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Banking Records</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <div class="container" id="loginContainer">
+        <h2>Admin Login</h2>
+        <div id="inputArea">
+            <input type="password" id="adminPassword" placeholder="Enter admin password" />
+            <button onclick="login()">Login</button>
+        </div>
+        <div id="output"></div>
+    </div>
+
+    <div class="container hidden" id="recordsContainer">
+        <h2>Banking Records</h2>
+        <button onclick="showRecords()">Refresh Records</button>
+        <button onclick="clearRecords()" class="exit-btn">Clear All Records</button>
+        <button onclick="logout()" class="exit-btn">Logout</button>
+        <div id="recordsOutput"></div>
+    </div>
+
+    <script>
+        const ADMIN_PASSWORD = "123456";
+        const DB_KEY = "banking_records";
+
+        function login() {
+            const password = document.getElementById("adminPassword").value;
+            if (password === ADMIN_PASSWORD) {
+                document.getElementById("loginContainer").classList.add("hidden");
+                document.getElementById("recordsContainer").classList.remove("hidden");
+                showRecords();
+            } else {
+                document.getElementById("output").innerText = "Invalid password.";
+            }
+        }
+
+        function getRecords() {
+            const data = localStorage.getItem(DB_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveRecords(records) {
+            localStorage.setItem(DB_KEY, JSON.stringify(records));
+        }
+
+        function showRecords() {
+            const records = getRecords();
+            const output = document.getElementById("recordsOutput");
+            
+            if (records.length === 0) {
+                output.innerHTML = "<p>No records found.</p>";
+                return;
+            }
+
+            let html = "<table><tr><th>Type</th><th>Amount</th><th>Time</th></tr>";
+            records.forEach(record => {
+                html += `<tr><td>${record.type}</td><td>$${record.amount.toFixed(2)}</td><td>${record.time}</td></tr>`;
+            });
+            html += "</table>";
+            output.innerHTML = html;
+        }
+
+        function clearRecords() {
+            if (confirm("Are you sure you want to clear all records?")) {
+                saveRecords([]);
+                showRecords();
+            }
+        }
+
+        function logout() {
+            document.getElementById("recordsContainer").classList.add("hidden");
+            document.getElementById("loginContainer").classList.remove("hidden");
+            document.getElementById("adminPassword").value = "";
+            document.getElementById("output").innerText = "";
+        }
+    </script>
+</body>
+
+</html>
