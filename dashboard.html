@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SecureBank - Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏦</text></svg>">
+</head>
+
+<body class="dashboard-page">
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo-icon">🏦</span>
+            <span>SecureBank</span>
+        </div>
+        <div class="nav-user">
+            <span id="userName">Welcome</span>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <button class="nav-item active" onclick="showSection('overview')">
+                <span>📊</span> Overview
+            </button>
+            <button class="nav-item" onclick="showSection('accounts')">
+                <span>💳</span> My Accounts
+            </button>
+            <button class="nav-item" onclick="showSection('deposit')">
+                <span>⬆️</span> Deposit
+            </button>
+            <button class="nav-item" onclick="showSection('withdraw')">
+                <span>⬇️</span> Withdraw
+            </button>
+            <button class="nav-item" onclick="showSection('transfer')">
+                <span>↔️</span> Transfer
+            </button>
+            <button class="nav-item" onclick="showSection('history')">
+                <span>📜</span> Transaction History
+            </button>
+        </div>
+
+        <div class="main-content">
+            <!-- Overview Section -->
+            <section id="overview" class="content-section active">
+                <h2>Account Overview</h2>
+                <div class="cards-container">
+                    <div class="balance-card total">
+                        <div class="card-icon">💰</div>
+                        <div class="card-info">
+                            <h3>Total Balance</h3>
+                            <p class="balance-amount" id="totalBalance">$0.00</p>
+                        </div>
+                    </div>
+                    <div class="balance-card checking">
+                        <div class="card-icon">🏦</div>
+                        <div class="card-info">
+                            <h3>Checking Account</h3>
+                            <p class="balance-amount" id="checkingBalance">$0.00</p>
+                            <p class="account-number" id="checkingNumber">---</p>
+                        </div>
+                    </div>
+                    <div class="balance-card savings">
+                        <div class="card-icon">📈</div>
+                        <div class="card-info">
+                            <h3>Savings Account</h3>
+                            <p class="balance-amount" id="savingsBalance">$0.00</p>
+                            <p class="account-number" id="savingsNumber">---</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Accounts Section -->
+            <section id="accounts" class="content-section">
+                <h2>My Accounts</h2>
+                <div class="accounts-grid" id="accountsGrid"></div>
+            </section>
+
+            <!-- Deposit Section -->
+            <section id="deposit" class="content-section">
+                <h2>Deposit Funds</h2>
+                <div class="form-card">
+                    <div class="form-group">
+                        <label>Select Account</label>
+                        <select id="depositAccount">
+                            <option value="checking">Checking Account</option>
+                            <option value="savings">Savings Account</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" id="depositAmount" placeholder="Enter amount" min="0.01" step="0.01" />
+                    </div>
+                    <button class="btn-primary" onclick="processDeposit()">Deposit</button>
+                    <div id="depositMessage" class="message"></div>
+                </div>
+            </section>
+
+            <!-- Withdraw Section -->
+            <section id="withdraw" class="content-section">
+                <h2>Withdraw Funds</h2>
+                <div class="form-card">
+                    <div class="form-group">
+                        <label>Select Account</label>
+                        <select id="withdrawAccount">
+                            <option value="checking">Checking Account</option>
+                            <option value="savings">Savings Account</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" id="withdrawAmount" placeholder="Enter amount" min="0.01" step="0.01" />
+                    </div>
+                    <button class="btn-primary" onclick="processWithdraw()">Withdraw</button>
+                    <div id="withdrawMessage" class="message"></div>
+                </div>
+            </section>
+
+            <!-- Transfer Section -->
+            <section id="transfer" class="content-section">
+                <h2>Transfer Funds</h2>
+                <div class="form-card">
+                    <div class="form-group">
+                        <label>From Account</label>
+                        <select id="transferFrom">
+                            <option value="checking">Checking Account</option>
+                            <option value="savings">Savings Account</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>To Account</label>
+                        <select id="transferTo">
+                            <option value="savings">Savings Account</option>
+                            <option value="checking">Checking Account</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" id="transferAmount" placeholder="Enter amount" min="0.01" step="0.01" />
+                    </div>
+                    <button class="btn-primary" onclick="processTransfer()">Transfer</button>
+                    <div id="transferMessage" class="message"></div>
+                </div>
+            </section>
+
+            <!-- History Section -->
+            <section id="history" class="content-section">
+                <h2>Transaction History</h2>
+                <div class="filter-bar">
+                    <select id="historyAccount" onchange="filterHistory()">
+                        <option value="all">All Accounts</option>
+                        <option value="checking">Checking</option>
+                        <option value="savings">Savings</option>
+                    </select>
+                    <select id="historyType" onchange="filterHistory()">
+                        <option value="all">All Types</option>
+                        <option value="Deposit">Deposits</option>
+                        <option value="Withdrawal">Withdrawals</option>
+                        <option value="Transfer">Transfers</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Account</th>
+                                <th>Amount</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const USERS_KEY = "banking_users";
+        const CURRENT_USER_KEY = "current_user";
+        const TRANSACTIONS_KEY = "banking_transactions";
+
+        let currentUser = null;
+
+        function getCurrentUser() {
+            const data = localStorage.getItem(CURRENT_USER_KEY);
+            return data ? JSON.parse(data) : null;
+        }
+
+        function saveCurrentUser() {
+            localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+        }
+
+        function getAllUsers() {
+            const data = localStorage.getItem(USERS_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveAllUsers(users) {
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        }
+
+        function getTransactions() {
+            const data = localStorage.getItem(TRANSACTIONS_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveTransaction(transaction) {
+            const transactions = getTransactions();
+            transactions.push(transaction);
+            localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(transactions));
+        }
+
+        function initDashboard() {
+            currentUser = getCurrentUser();
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('userName').textContent = `Welcome, ${currentUser.name}`;
+            updateBalances();
+            renderAccounts();
+        }
+
+        function updateBalances() {
+            const checking = currentUser.accounts.find(a => a.type === 'Checking');
+            const savings = currentUser.accounts.find(a => a.type === 'Savings');
+
+            const total = checking.balance + savings.balance;
+            document.getElementById('totalBalance').textContent = formatCurrency(total);
+            document.getElementById('checkingBalance').textContent = formatCurrency(checking.balance);
+            document.getElementById('savingsBalance').textContent = formatCurrency(savings.balance);
+            document.getElementById('checkingNumber').textContent = checking.accountNumber;
+            document.getElementById('savingsNumber').textContent = savings.accountNumber;
+        }
+
+        function renderAccounts() {
+            const grid = document.getElementById('accountsGrid');
+            grid.innerHTML = currentUser.accounts.map(account => `
+                <div class="account-card">
+                    <div class="account-header">
+                        <h3>${account.type}</h3>
+                        <span class="account-number">${account.accountNumber}</span>
+                    </div>
+                    <p class="account-balance">${formatCurrency(account.balance)}</p>
+                    <p class="account-status">Active</p>
+                </div>
+            `).join('');
+        }
+
+        function formatCurrency(amount) {
+            return '$' + amount.toFixed(2);
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(sectionId).classList.add('active');
+            event.target.closest('.nav-item').classList.add('active');
+
+            if (sectionId === 'history') {
+                renderHistory();
+            }
+        }
+
+        function showMessage(elementId, message, isError = true) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = 'message ' + (isError ? 'error' : 'success');
+            setTimeout(() => el.textContent = '', 3000);
+        }
+
+        function processDeposit() {
+            const accountType = document.getElementById('depositAccount').value;
+            const amount = parseFloat(document.getElementById('depositAmount').value);
+
+            if (isNaN(amount) || amount <= 0) {
+                showMessage('depositMessage', 'Please enter a valid amount.');
+                return;
+            }
+
+            const account = currentUser.accounts.find(a => a.type === (accountType === 'checking' ? 'Checking' : 'Savings'));
+            account.balance += amount;
+
+            saveTransaction({
+                userId: currentUser.id,
+                type: 'Deposit',
+                account: accountType,
+                amount: amount,
+                details: `Deposited to ${account.type}`,
+                date: new Date().toISOString()
+            });
+
+            updateUserInStorage();
+            document.getElementById('depositAmount').value = '';
+            showMessage('depositMessage', `Successfully deposited ${formatCurrency(amount)}`, false);
+            updateBalances();
+        }
+
+        function processWithdraw() {
+            const accountType = document.getElementById('withdrawAccount').value;
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+
+            if (isNaN(amount) || amount <= 0) {
+                showMessage('withdrawMessage', 'Please enter a valid amount.');
+                return;
+            }
+
+            const account = currentUser.accounts.find(a => a.type === (accountType === 'checking' ? 'Checking' : 'Savings'));
+
+            if (account.balance < amount) {
+                showMessage('withdrawMessage', 'Insufficient funds.');
+                return;
+            }
+
+            account.balance -= amount;
+
+            saveTransaction({
+                userId: currentUser.id,
+                type: 'Withdrawal',
+                account: accountType,
+                amount: amount,
+                details: `Withdrawn from ${account.type}`,
+                date: new Date().toISOString()
+            });
+
+            updateUserInStorage();
+            document.getElementById('withdrawAmount').value = '';
+            showMessage('withdrawMessage', `Successfully withdrew ${formatCurrency(amount)}`, false);
+            updateBalances();
+        }
+
+        function processTransfer() {
+            const fromType = document.getElementById('transferFrom').value;
+            const toType = document.getElementById('transferTo').value;
+            const amount = parseFloat(document.getElementById('transferAmount').value);
+
+            if (fromType === toType) {
+                showMessage('transferMessage', 'Cannot transfer to the same account.');
+                return;
+            }
+
+            if (isNaN(amount) || amount <= 0) {
+                showMessage('transferMessage', 'Please enter a valid amount.');
+                return;
+            }
+
+            const fromAccount = currentUser.accounts.find(a => a.type === (fromType === 'checking' ? 'Checking' : 'Savings'));
+
+            if (fromAccount.balance < amount) {
+                showMessage('transferMessage', 'Insufficient funds.');
+                return;
+            }
+
+            const toAccount = currentUser.accounts.find(a => a.type === (toType === 'checking' ? 'Checking' : 'Savings'));
+
+            fromAccount.balance -= amount;
+            toAccount.balance += amount;
+
+            saveTransaction({
+                userId: currentUser.id,
+                type: 'Transfer',
+                account: fromType,
+                amount: amount,
+                details: `Transfer to ${toAccount.type}`,
+                date: new Date().toISOString()
+            });
+
+            saveTransaction({
+                userId: currentUser.id,
+                type: 'Transfer',
+                account: toType,
+                amount: amount,
+                details: `Transfer from ${fromAccount.type}`,
+                date: new Date().toISOString()
+            });
+
+            updateUserInStorage();
+            document.getElementById('transferAmount').value = '';
+            showMessage('transferMessage', `Successfully transferred ${formatCurrency(amount)}`, false);
+            updateBalances();
+        }
+
+        function renderHistory() {
+            const accountFilter = document.getElementById('historyAccount').value;
+            const typeFilter = document.getElementById('historyType').value;
+
+            let transactions = getTransactions().filter(t => t.userId === currentUser.id);
+
+            if (accountFilter !== 'all') {
+                transactions = transactions.filter(t => t.account === accountFilter);
+            }
+            if (typeFilter !== 'all') {
+                transactions = transactions.filter(t => t.type === typeFilter);
+            }
+
+            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const tbody = document.getElementById('historyBody');
+            if (transactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">No transactions found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = transactions.map(t => `
+                <tr>
+                    <td>${new Date(t.date).toLocaleDateString()}</td>
+                    <td>${t.type}</td>
+                    <td>${t.account.charAt(0).toUpperCase() + t.account.slice(1)}</td>
+                    <td class="${t.type === 'Deposit' ? 'positive' : 'negative'}">${t.type === 'Deposit' ? '+' : '-'}${formatCurrency(t.amount)}</td>
+                    <td>${t.details}</td>
+                </tr>
+            `).join('');
+        }
+
+        function filterHistory() {
+            renderHistory();
+        }
+
+        function updateUserInStorage() {
+            const users = getAllUsers();
+            const index = users.findIndex(u => u.id === currentUser.id);
+            users[index] = currentUser;
+            saveAllUsers(users);
+            saveCurrentUser();
+        }
+
+        function logout() {
+            localStorage.removeItem(CURRENT_USER_KEY);
+            window.location.href = 'index.html';
+        }
+
+        initDashboard();
+    </script>
+</body>
+
+</html>

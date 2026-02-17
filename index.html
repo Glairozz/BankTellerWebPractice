@@ -4,99 +4,162 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Banking Program</title>
+    <title>SecureBank - Login</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏦</text></svg>">
 </head>
 
-<body>
-    <div class="container">
-        <h2>Banking Program</h2>
-        <a href="admin.html" class="admin-link">Admin</a>
-        <button onclick="showBalance()">Show Balance</button>
-        <button onclick="showDeposit()">Deposit</button>
-        <button onclick="showWithdraw()">Withdraw</button>
-        <button onclick="exitProgram()" class="exit-btn">Exit</button>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="logo">
+            <span class="logo-icon">🏦</span>
+            <h1>SecureBank</h1>
+            <p class="tagline">Your Trusted Banking Partner</p>
+        </div>
 
-        <div id="inputArea" class="hidden"></div>
-        <div id="output"></div>
+        <div class="auth-box">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('login')">Login</button>
+                <button class="tab" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required />
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required />
+                </div>
+                <button type="submit" class="btn-primary">Login</button>
+            </form>
+
+            <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="registerName">Full Name</label>
+                    <input type="text" id="registerName" placeholder="Enter your full name" required />
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email" required />
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" placeholder="Create a password" required minlength="6" />
+                </div>
+                <div class="form-group">
+                    <label for="registerConfirm">Confirm Password</label>
+                    <input type="password" id="registerConfirm" placeholder="Confirm your password" required />
+                </div>
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+
+            <div id="authMessage" class="message"></div>
+        </div>
+
+        <div class="admin-link">
+            <a href="admin.html">Admin Login</a>
+        </div>
     </div>
 
     <script>
-        let balance = 0;
-        const DB_KEY = "banking_records";
+        const USERS_KEY = "banking_users";
+        const CURRENT_USER_KEY = "current_user";
 
-        function getRecords() {
-            const data = localStorage.getItem(DB_KEY);
+        function getUsers() {
+            const data = localStorage.getItem(USERS_KEY);
             return data ? JSON.parse(data) : [];
         }
 
-        function saveRecord(type, amount) {
-            const records = getRecords();
-            records.push({
-                type: type,
-                amount: amount,
-                time: new Date().toLocaleString()
-            });
-            localStorage.setItem(DB_KEY, JSON.stringify(records));
+        function saveUsers(users) {
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
         }
 
-        function showBalance() {
-            document.getElementById("output").innerText = `Your balance is: $${balance.toFixed(2)}`;
-        }
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
 
-        function showDeposit() {
-            const area = document.getElementById("inputArea");
-            area.innerHTML = `
-                <input type='number' id='depositAmount' placeholder='Enter amount to deposit' />
-                <button onclick='deposit()'>Confirm Deposit</button>
-            `;
-            area.classList.remove("hidden");
-        }
-
-        function deposit() {
-            let amount = parseFloat(document.getElementById("depositAmount").value);
-            if (isNaN(amount) || amount <= 0) {
-                document.getElementById("output").innerText = "Enter a valid amount.";
-                return;
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('registerForm').classList.add('hidden');
+            } else {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('registerForm').classList.remove('hidden');
             }
-            balance += amount;
-            saveRecord("Deposit", amount);
-            document.getElementById("output").innerText = `Deposited $${amount.toFixed(2)}.`;
-            document.getElementById("inputArea").classList.add("hidden");
+            document.getElementById('authMessage').textContent = '';
         }
 
-        function showWithdraw() {
-            const area = document.getElementById("inputArea");
-            area.innerHTML = `
-                <input type='number' id='withdrawAmount' placeholder='Enter amount to withdraw' />
-                <button onclick='withdraw()'>Confirm Withdrawal</button>
-            `;
-            area.classList.remove("hidden");
+        function showMessage(msg, isError = true) {
+            const el = document.getElementById('authMessage');
+            el.textContent = msg;
+            el.className = 'message ' + (isError ? 'error' : 'success');
         }
 
-        function withdraw() {
-            let amount = parseFloat(document.getElementById("withdrawAmount").value);
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const users = getUsers();
+            const user = users.find(u => u.email === email && u.password === password);
 
-            if (isNaN(amount) || amount <= 0) {
-                document.getElementById("output").innerText = "Enter a valid amount.";
-                return;
+            if (user) {
+                localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+                window.location.href = 'dashboard.html';
+            } else {
+                showMessage('Invalid email or password.');
             }
+        }
 
-            if (amount > balance) {
-                document.getElementById("output").innerText = "Insufficient funds.";
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirm = document.getElementById('registerConfirm').value;
+
+            if (password !== confirm) {
+                showMessage('Passwords do not match.');
                 return;
             }
 
-            balance -= amount;
-            saveRecord("Withdrawal", amount);
-            document.getElementById("output").innerText = `Withdrew $${amount.toFixed(2)}.`;
-            document.getElementById("inputArea").classList.add("hidden");
+            const users = getUsers();
+            if (users.find(u => u.email === email)) {
+                showMessage('Email already registered.');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now(),
+                name,
+                email,
+                password,
+                balance: 0,
+                accounts: [
+                    { type: 'Checking', balance: 0, accountNumber: generateAccountNumber() },
+                    { type: 'Savings', balance: 0, accountNumber: generateAccountNumber() }
+                ],
+                createdAt: new Date().toISOString()
+            };
+
+            users.push(newUser);
+            saveUsers(users);
+            showMessage('Account created! Please login.', false);
+            switchTab('login');
         }
 
-        function exitProgram() {
-            document.getElementById("output").innerText = "Thank you for using the banking program.";
-            document.getElementById("inputArea").classList.add("hidden");
+        function generateAccountNumber() {
+            return 'SB' + Math.floor(100000 + Math.random() * 900000);
         }
+
+        // Check if already logged in
+        window.onload = function() {
+            const currentUser = localStorage.getItem(CURRENT_USER_KEY);
+            if (currentUser) {
+                window.location.href = 'dashboard.html';
+            }
+        };
     </script>
 </body>
 

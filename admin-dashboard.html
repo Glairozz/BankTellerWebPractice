@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SecureBank - Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏦</text></svg>">
+</head>
+
+<body class="admin-page">
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo-icon">🔐</span>
+            <span>Admin Panel</span>
+        </div>
+        <div class="nav-user">
+            <span>Administrator</span>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-sidebar">
+            <button class="nav-item active" onclick="showSection('users')">
+                <span>👥</span> Users
+            </button>
+            <button class="nav-item" onclick="showSection('transactions')">
+                <span>📊</span> All Transactions
+            </button>
+            <button class="nav-item" onclick="showSection('statistics')">
+                <span>📈</span> Statistics
+            </button>
+            <button class="nav-item" onclick="showSection('settings')">
+                <span>⚙️</span> Settings
+            </button>
+        </div>
+
+        <div class="admin-content">
+            <!-- Users Section -->
+            <section id="users" class="content-section active">
+                <div class="section-header">
+                    <h2>User Management</h2>
+                    <span class="badge" id="userCount">0 Users</span>
+                </div>
+                <div class="table-container">
+                    <table id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Checking Balance</th>
+                                <th>Savings Balance</th>
+                                <th>Total Balance</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Transactions Section -->
+            <section id="transactions" class="content-section">
+                <div class="section-header">
+                    <h2>All Transactions</h2>
+                    <button class="btn-secondary" onclick="exportTransactions()">Export CSV</button>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="searchTransaction" placeholder="Search by user email..." oninput="filterTransactions()" />
+                    <select id="filterType" onchange="filterTransactions()">
+                        <option value="all">All Types</option>
+                        <option value="Deposit">Deposits</option>
+                        <option value="Withdrawal">Withdrawals</option>
+                        <option value="Transfer">Transfers</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table id="transactionsTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>User</th>
+                                <th>Type</th>
+                                <th>Account</th>
+                                <th>Amount</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Statistics Section -->
+            <section id="statistics" class="content-section">
+                <h2>System Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <h3>Total Users</h3>
+                            <p class="stat-value" id="statUsers">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <h3>Total Deposits</h3>
+                            <p class="stat-value" id="statDeposits">$0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💸</div>
+                        <div class="stat-info">
+                            <h3>Total Withdrawals</h3>
+                            <p class="stat-value" id="statWithdrawals">$0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-info">
+                            <h3>Total Transactions</h3>
+                            <p class="stat-value" id="statTransactions">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏦</div>
+                        <div class="stat-info">
+                            <h3>Total Bank Balance</h3>
+                            <p class="stat-value" id="statBankBalance">$0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="content-section">
+                <h2>Admin Settings</h2>
+                <div class="settings-card">
+                    <h3>Change Admin Password</h3>
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <input type="password" id="currentPassword" />
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="newPassword" />
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="confirmPassword" />
+                    </div>
+                    <button class="btn-primary" onclick="changePassword()">Update Password</button>
+                    <div id="settingsMessage" class="message"></div>
+                </div>
+                <div class="settings-card">
+                    <h3>Data Management</h3>
+                    <button class="btn-danger" onclick="clearAllData()">Clear All Data</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const USERS_KEY = "banking_users";
+        const TRANSACTIONS_KEY = "banking_transactions";
+
+        function checkAuth() {
+            if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+                window.location.href = 'admin.html';
+            }
+        }
+
+        function getUsers() {
+            const data = localStorage.getItem(USERS_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function getTransactions() {
+            const data = localStorage.getItem(TRANSACTIONS_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function formatCurrency(amount) {
+            return '$' + amount.toFixed(2);
+        }
+
+        function initDashboard() {
+            checkAuth();
+            renderUsers();
+            renderTransactions();
+            renderStatistics();
+        }
+
+        function renderUsers() {
+            const users = getUsers();
+            document.getElementById('userCount').textContent = `${users.length} Users`;
+            
+            if (users.length === 0) {
+                document.getElementById('usersBody').innerHTML = '<tr><td colspan="8">No users found.</td></tr>';
+                return;
+            }
+
+            document.getElementById('usersBody').innerHTML = users.map(user => {
+                const checking = user.accounts.find(a => a.type === 'Checking');
+                const savings = user.accounts.find(a => a.type === 'Savings');
+                return `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${formatCurrency(checking.balance)}</td>
+                        <td>${formatCurrency(savings.balance)}</td>
+                        <td><strong>${formatCurrency(checking.balance + savings.balance)}</strong></td>
+                        <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                        <td>
+                            <button class="btn-small" onclick="viewUser(${user.id})">View</button>
+                            <button class="btn-small btn-danger" onclick="deleteUser(${user.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderTransactions() {
+            const transactions = getTransactions();
+            const users = getUsers();
+
+            document.getElementById('transactionsBody').innerHTML = transactions.map(t => {
+                const user = users.find(u => u.id === t.userId);
+                return `
+                    <tr>
+                        <td>${new Date(t.date).toLocaleString()}</td>
+                        <td>${user ? user.email : 'Unknown'}</td>
+                        <td>${t.type}</td>
+                        <td>${t.account.charAt(0).toUpperCase() + t.account.slice(1)}</td>
+                        <td class="${t.type === 'Deposit' ? 'positive' : 'negative'}">${t.type === 'Deposit' ? '+' : '-'}${formatCurrency(t.amount)}</td>
+                        <td>${t.details}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterTransactions() {
+            const search = document.getElementById('searchTransaction').value.toLowerCase();
+            const type = document.getElementById('filterType').value;
+            const transactions = getTransactions();
+            const users = getUsers();
+
+            let filtered = transactions;
+
+            if (search) {
+                filtered = filtered.filter(t => {
+                    const user = users.find(u => u.id === t.userId);
+                    return user && user.email.toLowerCase().includes(search);
+                });
+            }
+
+            if (type !== 'all') {
+                filtered = filtered.filter(t => t.type === type);
+            }
+
+            document.getElementById('transactionsBody').innerHTML = filtered.map(t => {
+                const user = users.find(u => u.id === t.userId);
+                return `
+                    <tr>
+                        <td>${new Date(t.date).toLocaleString()}</td>
+                        <td>${user ? user.email : 'Unknown'}</td>
+                        <td>${t.type}</td>
+                        <td>${t.account.charAt(0).toUpperCase() + t.account.slice(1)}</td>
+                        <td class="${t.type === 'Deposit' ? 'positive' : 'negative'}">${t.type === 'Deposit' ? '+' : '-'}${formatCurrency(t.amount)}</td>
+                        <td>${t.details}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderStatistics() {
+            const users = getUsers();
+            const transactions = getTransactions();
+
+            const deposits = transactions.filter(t => t.type === 'Deposit').reduce((sum, t) => sum + t.amount, 0);
+            const withdrawals = transactions.filter(t => t.type === 'Withdrawal').reduce((sum, t) => sum + t.amount, 0);
+            const totalBankBalance = users.reduce((sum, u) => {
+                return sum + u.accounts.reduce((s, a) => s + a.balance, 0);
+            }, 0);
+
+            document.getElementById('statUsers').textContent = users.length;
+            document.getElementById('statDeposits').textContent = formatCurrency(deposits);
+            document.getElementById('statWithdrawals').textContent = formatCurrency(withdrawals);
+            document.getElementById('statTransactions').textContent = transactions.length;
+            document.getElementById('statBankBalance').textContent = formatCurrency(totalBankBalance);
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(sectionId).classList.add('active');
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        function viewUser(userId) {
+            const users = getUsers();
+            const user = users.find(u => u.id === userId);
+            alert(`User Details:\n\nName: ${user.name}\nEmail: ${user.email}\nChecking: ${formatCurrency(user.accounts[0].balance)}\nSavings: ${formatCurrency(user.accounts[1].balance)}`);
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                let users = getUsers();
+                users = users.filter(u => u.id !== userId);
+                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+                
+                let transactions = getTransactions();
+                transactions = transactions.filter(t => t.userId !== userId);
+                localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(transactions));
+                
+                renderUsers();
+                renderTransactions();
+                renderStatistics();
+            }
+        }
+
+        function exportTransactions() {
+            const transactions = getTransactions();
+            const users = getUsers();
+            
+            let csv = 'Date,User Email,Type,Account,Amount,Details\n';
+            transactions.forEach(t => {
+                const user = users.find(u => u.id === t.userId);
+                csv += `"${new Date(t.date).toLocaleString()}","${user ? user.email : 'Unknown'}","${t.type}","${t.account}","${t.amount}","${t.details}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'transactions.csv';
+            a.click();
+        }
+
+        function changePassword() {
+            const current = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            const msg = document.getElementById('settingsMessage');
+
+            if (current !== '123456') {
+                msg.textContent = 'Current password is incorrect.';
+                msg.className = 'message error';
+                return;
+            }
+
+            if (newPass !== confirm) {
+                msg.textContent = 'New passwords do not match.';
+                msg.className = 'message error';
+                return;
+            }
+
+            msg.textContent = 'Password updated successfully! (Demo - not persisted)';
+            msg.className = 'message success';
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete ALL data? This cannot be undone!')) {
+                if (confirm('This will delete all users and transactions. Continue?')) {
+                    localStorage.removeItem(USERS_KEY);
+                    localStorage.removeItem(TRANSACTIONS_KEY);
+                    localStorage.removeItem('current_user');
+                    renderUsers();
+                    renderTransactions();
+                    renderStatistics();
+                }
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('adminLoggedIn');
+            window.location.href = 'admin.html';
+        }
+
+        initDashboard();
+    </script>
+</body>
+
+</html>
