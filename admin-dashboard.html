@@ -12,6 +12,7 @@
 <body class="admin-page">
     <nav class="navbar">
         <div class="nav-brand">
+            <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
             <span class="logo-icon">🔐</span>
             <span>Admin Panel</span>
         </div>
@@ -20,6 +21,8 @@
             <button class="btn-logout" onclick="logout()">Logout</button>
         </div>
     </nav>
+
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <div class="admin-container">
         <div class="admin-sidebar">
@@ -302,6 +305,16 @@
             
             document.getElementById(sectionId).classList.add('active');
             event.target.closest('.nav-item').classList.add('active');
+
+            if (window.innerWidth <= 768) {
+                document.querySelector('.admin-sidebar').classList.remove('active');
+                document.querySelector('.sidebar-overlay').classList.remove('active');
+            }
+        }
+
+        function toggleSidebar() {
+            document.querySelector('.admin-sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
         }
 
         function viewUser(userId) {

@@ -944,6 +944,210 @@ tbody tr:last-child td {
     .account-balance {
         font-size: 28px;
     }
+
+    /* Mobile Navigation */
+    .mobile-menu-btn {
+        display: flex !important;
+    }
+
+    .sidebar, .admin-sidebar {
+        position: fixed;
+        left: -100%;
+        top: 70px;
+        width: 280px;
+        height: calc(100vh - 70px);
+        z-index: 1000;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+    }
+
+    .sidebar.active, .admin-sidebar.active {
+        left: 0;
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 70px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    /* Table responsive */
+    .table-container {
+        overflow-x: auto;
+    }
+
+    table {
+        min-width: 600px;
+    }
+
+    th, td {
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+
+    /* Cards full width */
+    .balance-card {
+        padding: 20px;
+    }
+
+    .card-icon {
+        font-size: 36px;
+        width: 56px;
+        height: 56px;
+    }
+
+    /* Form adjustments */
+    .form-card {
+        padding: 24px;
+    }
+
+    .form-group input,
+    .form-group select {
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+
+    /* Account cards */
+    .accounts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Stats */
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 20px;
+    }
+
+    .stat-icon {
+        font-size: 36px;
+        width: 56px;
+        height: 56px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+    }
+
+    /* Section header */
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        padding: 14px;
+    }
+
+    .btn-secondary, .btn-danger {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar {
+        padding: 10px 12px;
+    }
+
+    .nav-brand {
+        font-size: 18px;
+    }
+
+    .nav-brand .logo-icon {
+        font-size: 24px;
+    }
+
+    .nav-user span {
+        display: none;
+    }
+
+    .logo h1 {
+        font-size: 24px;
+    }
+
+    .logo-icon {
+        font-size: 40px;
+    }
+
+    .auth-box {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .tabs {
+        margin-bottom: 20px;
+    }
+
+    .tab {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .main-content, .admin-content {
+        padding: 16px;
+    }
+
+    .content-section h2 {
+        font-size: 20px;
+    }
+
+    .balance-amount {
+        font-size: 20px;
+    }
+
+    .account-balance {
+        font-size: 24px;
+    }
+
+    .account-header h3 {
+        font-size: 16px;
+    }
+
+    /* Hide some columns on very small screens */
+    .hide-mobile {
+        display: none;
+    }
+}
+
+/* Touch improvements */
+@media (hover: none) {
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .btn-danger:hover,
+    .btn-logout:hover,
+    .balance-card:hover,
+    .account-card:hover,
+    .stat-card:hover {
+        transform: none;
+    }
+
+    .btn-primary:active,
+    .btn-secondary:active,
+    .btn-danger:active {
+        transform: scale(0.98);
+    }
+}
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px;
 }
 
 /* Loading Animation */

@@ -12,6 +12,7 @@
 <body class="dashboard-page">
     <nav class="navbar">
         <div class="nav-brand">
+            <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
             <span class="logo-icon">🏦</span>
             <span>SecureBank</span>
         </div>
@@ -20,6 +21,8 @@
             <button class="btn-logout" onclick="logout()">Logout</button>
         </div>
     </nav>
+
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <div class="dashboard-container">
         <div class="sidebar">
@@ -266,9 +269,20 @@
             document.getElementById(sectionId).classList.add('active');
             event.target.closest('.nav-item').classList.add('active');
 
+            // Close sidebar on mobile
+            if (window.innerWidth <= 768) {
+                document.querySelector('.sidebar').classList.remove('active');
+                document.querySelector('.sidebar-overlay').classList.remove('active');
+            }
+
             if (sectionId === 'history') {
                 renderHistory();
             }
+        }
+
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
         }
 
         function showMessage(elementId, message, isError = true) {
