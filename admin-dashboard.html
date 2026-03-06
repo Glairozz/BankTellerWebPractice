@@ -10,7 +10,7 @@
 </head>
 
 <body class="admin-page">
-    <nav class="navbar">
+    <nav class="navbar page-enter">
         <div class="nav-brand">
             <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
             <span class="logo-icon">🔐</span>
@@ -43,11 +43,11 @@
         <div class="admin-content">
             <!-- Users Section -->
             <section id="users" class="content-section active">
-                <div class="section-header">
+                <div class="section-header fade-in-up">
                     <h2>User Management</h2>
                     <span class="badge" id="userCount">0 Users</span>
                 </div>
-                <div class="table-container">
+                <div class="table-container fade-in-up stagger-2">
                     <table id="usersTable">
                         <thead>
                             <tr>
@@ -68,11 +68,11 @@
 
             <!-- Transactions Section -->
             <section id="transactions" class="content-section">
-                <div class="section-header">
+                <div class="section-header fade-in-up">
                     <h2>All Transactions</h2>
                     <button class="btn-secondary" onclick="exportTransactions()">Export CSV</button>
                 </div>
-                <div class="filter-bar">
+                <div class="filter-bar fade-in-up stagger-2">
                     <input type="text" id="searchTransaction" placeholder="Search by user email..." oninput="filterTransactions()" />
                     <select id="filterType" onchange="filterTransactions()">
                         <option value="all">All Types</option>
@@ -81,7 +81,7 @@
                         <option value="Transfer">Transfers</option>
                     </select>
                 </div>
-                <div class="table-container">
+                <div class="table-container fade-in-up stagger-3">
                     <table id="transactionsTable">
                         <thead>
                             <tr>
@@ -100,37 +100,37 @@
 
             <!-- Statistics Section -->
             <section id="statistics" class="content-section">
-                <h2>System Statistics</h2>
+                <h2 class="fade-in-up">System Statistics</h2>
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card fade-in-up stagger-1 card-lift">
                         <div class="stat-icon">👥</div>
                         <div class="stat-info">
                             <h3>Total Users</h3>
                             <p class="stat-value" id="statUsers">0</p>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card fade-in-up stagger-2 card-lift">
                         <div class="stat-icon">💰</div>
                         <div class="stat-info">
                             <h3>Total Deposits</h3>
                             <p class="stat-value" id="statDeposits">$0.00</p>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card fade-in-up stagger-3 card-lift">
                         <div class="stat-icon">💸</div>
                         <div class="stat-info">
                             <h3>Total Withdrawals</h3>
                             <p class="stat-value" id="statWithdrawals">$0.00</p>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card fade-in-up stagger-4 card-lift">
                         <div class="stat-icon">📊</div>
                         <div class="stat-info">
                             <h3>Total Transactions</h3>
                             <p class="stat-value" id="statTransactions">0</p>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card fade-in-up stagger-5 card-lift">
                         <div class="stat-icon">🏦</div>
                         <div class="stat-info">
                             <h3>Total Bank Balance</h3>
@@ -142,8 +142,8 @@
 
             <!-- Settings Section -->
             <section id="settings" class="content-section">
-                <h2>Admin Settings</h2>
-                <div class="settings-card">
+                <h2 class="fade-in-up">Admin Settings</h2>
+                <div class="settings-card fade-in-up stagger-2">
                     <h3>Change Admin Password</h3>
                     <div class="form-group">
                         <label>Current Password</label>
@@ -160,7 +160,7 @@
                     <button class="btn-primary" onclick="changePassword()">Update Password</button>
                     <div id="settingsMessage" class="message"></div>
                 </div>
-                <div class="settings-card">
+                <div class="settings-card fade-in-up stagger-3">
                     <h3>Data Management</h3>
                     <button class="btn-danger" onclick="clearAllData()">Clear All Data</button>
                 </div>
@@ -197,6 +197,9 @@
             renderUsers();
             renderTransactions();
             renderStatistics();
+            
+            // Initialize scroll animations
+            setTimeout(initScrollAnimations, 100);
         }
 
         function renderUsers() {
@@ -395,6 +398,26 @@
         function logout() {
             sessionStorage.removeItem('adminLoggedIn');
             window.location.href = 'admin.html';
+        }
+
+        // Scroll Animation Observer
+        function initScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.fade-in-up, .fade-in-down, .fade-in-left, .fade-in-right, .fade-in, .scale-in').forEach(el => {
+                observer.observe(el);
+            });
         }
 
         initDashboard();

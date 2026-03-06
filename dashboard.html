@@ -10,7 +10,7 @@
 </head>
 
 <body class="dashboard-page">
-    <nav class="navbar">
+    <nav class="navbar page-enter">
         <div class="nav-brand">
             <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
             <span class="logo-icon">🏦</span>
@@ -49,16 +49,16 @@
         <div class="main-content">
             <!-- Overview Section -->
             <section id="overview" class="content-section active">
-                <h2>Account Overview</h2>
+                <h2 class="fade-in-up">Account Overview</h2>
                 <div class="cards-container">
-                    <div class="balance-card total">
+                    <div class="balance-card total fade-in-up stagger-1 card-lift">
                         <div class="card-icon">💰</div>
                         <div class="card-info">
                             <h3>Total Balance</h3>
                             <p class="balance-amount" id="totalBalance">$0.00</p>
                         </div>
                     </div>
-                    <div class="balance-card checking">
+                    <div class="balance-card checking fade-in-up stagger-2 card-lift">
                         <div class="card-icon">🏦</div>
                         <div class="card-info">
                             <h3>Checking Account</h3>
@@ -66,7 +66,7 @@
                             <p class="account-number" id="checkingNumber">---</p>
                         </div>
                     </div>
-                    <div class="balance-card savings">
+                    <div class="balance-card savings fade-in-up stagger-3 card-lift">
                         <div class="card-icon">📈</div>
                         <div class="card-info">
                             <h3>Savings Account</h3>
@@ -79,14 +79,14 @@
 
             <!-- Accounts Section -->
             <section id="accounts" class="content-section">
-                <h2>My Accounts</h2>
+                <h2 class="fade-in-up">My Accounts</h2>
                 <div class="accounts-grid" id="accountsGrid"></div>
             </section>
 
             <!-- Deposit Section -->
             <section id="deposit" class="content-section">
-                <h2>Deposit Funds</h2>
-                <div class="form-card">
+                <h2 class="fade-in-up">Deposit Funds</h2>
+                <div class="form-card fade-in-up stagger-2">
                     <div class="form-group">
                         <label>Select Account</label>
                         <select id="depositAccount">
@@ -105,8 +105,8 @@
 
             <!-- Withdraw Section -->
             <section id="withdraw" class="content-section">
-                <h2>Withdraw Funds</h2>
-                <div class="form-card">
+                <h2 class="fade-in-up">Withdraw Funds</h2>
+                <div class="form-card fade-in-up stagger-2">
                     <div class="form-group">
                         <label>Select Account</label>
                         <select id="withdrawAccount">
@@ -125,8 +125,8 @@
 
             <!-- Transfer Section -->
             <section id="transfer" class="content-section">
-                <h2>Transfer Funds</h2>
-                <div class="form-card">
+                <h2 class="fade-in-up">Transfer Funds</h2>
+                <div class="form-card fade-in-up stagger-2">
                     <div class="form-group">
                         <label>From Account</label>
                         <select id="transferFrom">
@@ -152,8 +152,8 @@
 
             <!-- History Section -->
             <section id="history" class="content-section">
-                <h2>Transaction History</h2>
-                <div class="filter-bar">
+                <h2 class="fade-in-up">Transaction History</h2>
+                <div class="filter-bar fade-in-up stagger-2">
                     <select id="historyAccount" onchange="filterHistory()">
                         <option value="all">All Accounts</option>
                         <option value="checking">Checking</option>
@@ -166,7 +166,7 @@
                         <option value="Transfer">Transfers</option>
                     </select>
                 </div>
-                <div class="table-container">
+                <div class="table-container fade-in-up stagger-3">
                     <table id="historyTable">
                         <thead>
                             <tr>
@@ -230,6 +230,9 @@
             document.getElementById('userName').textContent = `Welcome, ${currentUser.name}`;
             updateBalances();
             renderAccounts();
+            
+            // Initialize scroll animations
+            setTimeout(initScrollAnimations, 100);
         }
 
         function updateBalances() {
@@ -450,6 +453,26 @@
         function logout() {
             localStorage.removeItem(CURRENT_USER_KEY);
             window.location.href = 'index.html';
+        }
+
+        // Scroll Animation Observer
+        function initScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.fade-in-up, .fade-in-down, .fade-in-left, .fade-in-right, .fade-in, .scale-in').forEach(el => {
+                observer.observe(el);
+            });
         }
 
         initDashboard();
