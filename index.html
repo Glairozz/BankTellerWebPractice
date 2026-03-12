@@ -19,8 +19,8 @@
 
         <div class="auth-box fade-in-up stagger-2">
             <div class="tabs fade-in-up stagger-3">
-                <button class="tab active" onclick="switchTab('login')">Login</button>
-                <button class="tab" onclick="switchTab('register')">Register</button>
+                <button class="tab active" data-tab="login">Login</button>
+                <button class="tab" data-tab="register">Register</button>
             </div>
 
             <form id="loginForm" onsubmit="handleLogin(event)">
@@ -79,7 +79,9 @@
         function switchTab(tab) {
             const tabs = document.querySelectorAll('.tab');
             tabs.forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            
+            const activeTab = document.querySelector(`.tab[data-tab="${tab}"]`);
+            if (activeTab) activeTab.classList.add('active');
 
             if (tab === 'login') {
                 document.getElementById('loginForm').classList.remove('hidden');
@@ -90,6 +92,13 @@
             }
             document.getElementById('authMessage').textContent = '';
         }
+
+        // Tab click handlers
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                switchTab(this.dataset.tab);
+            });
+        });
 
         function showMessage(msg, isError = true) {
             const el = document.getElementById('authMessage');
