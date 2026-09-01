@@ -53,6 +53,7 @@ export interface PendingApproval {
   transaction: Transaction & {
     sourceAccount?: Account;
     destinationAccount?: Account;
+    initiatedBy?: { fullName: string };
   };
 }
 
