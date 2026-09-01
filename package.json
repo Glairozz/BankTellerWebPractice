@@ -1,0 +1,26 @@
+{
+  "name": "bankteller",
+  "version": "2.0.0",
+  "private": true,
+  "description": "SecureBank - A modern, production-grade online banking & teller system",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n API,WEB -c blue,green \"npm run dev -w @securebank/api\" \"npm run dev -w @securebank/web\"",
+    "build": "npm run build -w @securebank/api && npm run build -w @securebank/web",
+    "typecheck": "npm run typecheck -w @securebank/api && npm run typecheck -w @securebank/web",
+    "dev:api": "npm run dev -w @securebank/api",
+    "dev:web": "npm run dev -w @securebank/web",
+    "db:up": "docker compose up -d db",
+    "db:migrate": "npm run prisma:migrate -w @securebank/api",
+    "db:seed": "npm run prisma:seed -w @securebank/api",
+    "test": "npm run test -w @securebank/api"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

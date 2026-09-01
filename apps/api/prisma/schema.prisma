@@ -1,0 +1,277 @@
+// SecureBank - Prisma Schema (PostgreSQL)
+// ACID-compliant financial data model for online & teller banking.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------------------------
+
+enum Role {
+  CUSTOMER
+  TELLER
+  ADMIN
+}
+
+enum AccountType {
+  SAVINGS
+  CHECKING
+}
+
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+enum Currency {
+  USD
+  EUR
+  GBP
+  PHP
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AuditAction {
+  LOGIN_SUCCESS
+  LOGIN_FAILURE
+  LOGOUT
+  ACCOUNT_CREATED
+  ACCOUNT_FROZEN
+  ACCOUNT_UNFROZEN
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  BALANCE_ADJUSTMENT
+  TRANSACTION_APPROVED
+  TRANSACTION_REJECTED
+  PASSWORD_CHANGED
+  USER_CREATED
+}
+
+// ---------------------------------------------------------------------------
+// IDENTITY & USERS
+// ---------------------------------------------------------------------------
+
+model User {
+  id             String       @id @default(cuid())
+  fullName       String
+  email          String       @unique
+  passwordHash   String
+  role           Role         @default(CUSTOMER)
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  // Customer profile data (deterministic identifiers for teller search)
+  customerId     String?      @unique // e.g. "CUST-000123" - a human-friendly customer id
+  dateOfBirth    DateTime?
+  phone          String?
+  address        String?
+
+  accounts              Account[]        @relation("AccountOwner")
+  initiatedTxns         Transaction[]    @relation("InitiatedBy") // transfers initiated by this customer
+  performedTxns         Transaction[]    @relation("PerformedBy") // teller/operator who performed the op
+  auditLogsAsActor      AuditLog[]       @relation("AuditActor")
+  auditLogsAsTarget     AuditLog[]       @relation("AuditTarget")
+  approvals             TransactionApproval[] @relation("ApprovalsByTeller")
+  requestedCreations    AccountCreation[]    @relation("RequestedByTeller")
+  ownedCreations        AccountCreation[]    @relation("AccountCreationOwner")
+  loginAttempts         LoginAttempt[]
+  successfulAccessTokens AccessToken[]
+
+  @@index([role])
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// ACCOUNTS
+// ---------------------------------------------------------------------------
+
+model Account {
+  id                String        @id @default(cuid())
+  accountNumber     String        @unique // e.g. "SB-1234-5678-9012"
+  accountType       AccountType
+  currency          Currency      @default(USD)
+  balance           Decimal       @db.Decimal(19, 4) @default(0)
+  status            AccountStatus @default(ACTIVE)
+  ownerId           String
+  owner             User          @relation("AccountOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  version           Int           @default(0) // optimistic-concurrency guard
+
+  sourceTransactions Transaction[] @relation("SourceAccount")
+  destinationTransactions Transaction[] @relation("DestinationAccount")
+
+  @@index([ownerId])
+  @@index([accountNumber])
+  @@map("accounts")
+}
+
+// ---------------------------------------------------------------------------
+// TRANSACTIONS
+// ---------------------------------------------------------------------------
+
+// idempotency key prevents duplicate submission on retry.
+model Transaction {
+  id                 String            @id @default(cuid())
+  reference          String            @unique // human-friendly ref e.g. "TXN-20240901-XXXXXX"
+  type               TransactionType
+  amount             Decimal           @db.Decimal(19, 4)
+  currency           Currency          @default(USD)
+  status             TransactionStatus @default(PENDING)
+  idempotencyKey     String?           @unique
+
+  sourceAccountId    String?
+  sourceAccount      Account?          @relation("SourceAccount", fields: [sourceAccountId], references: [id])
+  destinationAccountId String?
+  destinationAccount Account?          @relation("DestinationAccount", fields: [destinationAccountId], references: [id])
+
+  // Which customer initiated it (for transfers)
+  initiatedById      String?
+  initiatedBy        User?             @relation("InitiatedBy", fields: [initiatedById], references: [id])
+  // Which teller/operator performed it
+  performedById      String?
+  performedBy        User?             @relation("PerformedBy", fields: [performedById], references: [id])
+
+  description        String?
+  failureReason      String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  approval           TransactionApproval?
+  auditLogs          AuditLog[]
+
+  @@index([sourceAccountId])
+  @@index([destinationAccountId])
+  @@index([initiatedById])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+// ---------------------------------------------------------------------------
+// HIGH-VALUE TRANSACTION APPROVAL (for teller / admin)
+// ---------------------------------------------------------------------------
+
+model TransactionApproval {
+  id             String         @id @default(cuid())
+  transactionId  String         @unique
+  transaction    Transaction    @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  requestedAmount Decimal       @db.Decimal(19, 4)
+  status         ApprovalStatus @default(PENDING)
+  approvedById   String?
+  approvedBy     User?          @relation("ApprovalsByTeller", fields: [approvedById], references: [id])
+  comments       String?
+  reviewedAt     DateTime?
+  createdAt      DateTime       @default(now())
+
+  @@map("transaction_approvals")
+}
+
+// ---------------------------------------------------------------------------
+// ACCOUNT CREATION / VERIFICATION WORKFLOW
+// ---------------------------------------------------------------------------
+
+model AccountCreation {
+  id              String         @id @default(cuid())
+  ownedById       String
+  ownedBy         User           @relation("AccountCreationOwner", fields: [ownedById], references: [id], onDelete: Cascade)
+  accountType     AccountType
+  currency        Currency       @default(USD)
+  requestedByTellerId String?
+  requestedByTeller  User?       @relation("RequestedByTeller", fields: [requestedByTellerId], references: [id])
+  status          ApprovalStatus @default(PENDING)
+  accountId       String?        // linked once approved & account opened
+  rejectedReason  String?
+  createdAt       DateTime       @default(now())
+  reviewedAt      DateTime?
+
+  @@map("account_creations")
+}
+
+// ---------------------------------------------------------------------------
+// AUDIT LOG - compliance trail of sensitive operations
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  action    AuditAction
+  actorId   String?
+  actor     User?       @relation("AuditActor", fields: [actorId], references: [id])
+  targetUserId String?
+  targetUser  User?     @relation("AuditTarget", fields: [targetUserId], references: [id])
+  transactionId String?
+  transaction  Transaction? @relation(fields: [transactionId], references: [id])
+  accountId String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime    @default(now())
+
+  @@index([actorId])
+  @@index([targetUserId])
+  @@index([transactionId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// ACCESS TOKENS - server-side revocation for httpOnly JWT sessions
+// ---------------------------------------------------------------------------
+
+model AccessToken {
+  id        String   @id @default(cuid())
+  jti       String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("access_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// LOGIN ATTEMPTS - for account lockout & security forensics
+// ---------------------------------------------------------------------------
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  success   Boolean
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("login_attempts")
+}
